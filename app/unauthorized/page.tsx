@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { Route } from 'next'
 import { Button } from '@/components/ui/Button'
 
 export default function UnauthorizedPage() {
@@ -11,7 +12,7 @@ export default function UnauthorizedPage() {
         <p className="text-sm text-slate-500 mb-6">
           You don't have permission to view this page.
         </p>
-        <Link href="/dashboard">
+        <Link href={"/dashboard" as Route}>
           <Button variant="ghost">Back to Dashboard</Button>
         </Link>
       </div>

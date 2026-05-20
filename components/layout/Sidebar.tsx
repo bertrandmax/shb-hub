@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import type { Route } from 'next'
 import { cn } from '@/lib/utils'
 import type { AppUser } from '@/lib/auth/roles'
 import { isProjectManager, isMarketingHead } from '@/lib/auth/roles'
@@ -76,7 +77,7 @@ export function Sidebar({ user }: { user: AppUser }) {
             return (
               <Link
                 key={href}
-                href={href}
+                href={href as Route}
                 className={cn(
                   'block mx-2 px-3 py-2 rounded-lg text-sm font-body transition-colors',
                   active
