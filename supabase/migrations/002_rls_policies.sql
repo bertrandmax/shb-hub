@@ -112,7 +112,6 @@ create policy "tasks_select" on tasks
   for select to authenticated
   using (
     current_user_role() = 'project_manager'
-    or scope_type = 'global'
     or user_has_scope(scope_type, scope_id)
   );
 
@@ -293,7 +292,6 @@ create policy "budget_requests_insert" on budget_requests
     or (scope_type = 'event'       and user_has_scope('event'::scope_type,       scope_id))
     or (scope_type = 'competition' and user_has_scope('competition'::scope_type, scope_id))
     or (scope_type = 'division'    and user_has_scope('division'::scope_type,    scope_id))
-    or (scope_type = 'global'      and current_user_role() = 'project_manager')
   );
 
 -- Only PM can approve/reject (update status); requester can update their own pending request.
@@ -367,10 +365,16 @@ create policy "blockers_select" on blockers
     or user_has_scope(scope_type, scope_id)
   );
 
--- Any authenticated member can raise a blocker.
+-- Any authenticated member can raise a blocker in their own scope.
 create policy "blockers_insert" on blockers
   for insert to authenticated
-  with check (true);
+  with check (
+    flagged_by = auth.uid()
+    and (
+      current_user_role() = 'project_manager'
+      or user_has_scope(scope_type, scope_id)
+    )
+  );
 
 -- PM or the person who flagged it can update a blocker.
 create policy "blockers_update" on blockers

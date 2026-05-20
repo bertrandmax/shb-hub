@@ -52,6 +52,8 @@ select lives_ok(
 -- PIC cannot insert task in another scope
 select throws_ok(
   $$insert into tasks (title, scope_type, scope_id) values ('Bad', 'competition', 'other-id')$$,
+  '42501',
+  'new row violates row-level security policy for table "tasks"',
   'PIC cannot insert task outside scope'
 );
 
