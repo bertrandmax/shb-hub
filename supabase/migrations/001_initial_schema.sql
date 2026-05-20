@@ -42,7 +42,7 @@ create table users (
   email      text not null unique,
   name       text not null,
   role_type  role_type not null,
-  created_at timestamptz default now()
+  created_at timestamptz not null default now()
 );
 
 create table user_event_scopes (
@@ -62,14 +62,15 @@ create table invite_tokens (
   token       uuid not null default uuid_generate_v4() unique,
   expires_at  timestamptz not null default now() + interval '48 hours',
   used_at     timestamptz,
-  invited_by  uuid references users(id)
+  invited_by  uuid references users(id) on delete set null,
+  created_at  timestamptz not null default now()
 );
 
 create table events (
   id         uuid primary key default uuid_generate_v4(),
   name       event_name not null unique,
   status     event_status not null default 'upcoming',
-  created_at timestamptz default now()
+  created_at timestamptz not null default now()
 );
 
 create table competitions (
@@ -79,7 +80,7 @@ create table competitions (
   status      event_status not null default 'upcoming',
   is_active   boolean not null default true,
   order_index int not null default 0,
-  created_at  timestamptz default now(),
+  created_at  timestamptz not null default now(),
   unique(event_id, name)
 );
 
@@ -87,7 +88,8 @@ create table divisions (
   id              uuid primary key default uuid_generate_v4(),
   name            text not null,
   type            division_type not null,
-  parent_event_id uuid references events(id)
+  parent_event_id uuid references events(id),
+  created_at      timestamptz not null default now()
 );
 
 create table tasks (
@@ -99,7 +101,7 @@ create table tasks (
   assigned_to uuid references users(id),
   scope_type  scope_type not null,
   scope_id    text not null,
-  created_at  timestamptz default now()
+  created_at  timestamptz not null default now()
 );
 
 create table event_milestones (
@@ -111,6 +113,7 @@ create table event_milestones (
   status      milestone_status not null default 'upcoming',
   order_index int not null default 0,
   created_by  uuid references users(id),
+  created_at  timestamptz not null default now(),
   updated_at  timestamptz default now()
 );
 
@@ -124,7 +127,7 @@ create table sponsors (
   amount_received    numeric(12,2) default 0,
   next_followup_date date,
   notes              text,
-  created_at         timestamptz default now()
+  created_at         timestamptz not null default now()
 );
 
 create table sponsor_interactions (
@@ -133,7 +136,8 @@ create table sponsor_interactions (
   logged_by        uuid references users(id),
   interaction_type interaction_type not null,
   notes            text,
-  date             date not null default current_date
+  date             date not null default current_date,
+  created_at       timestamptz not null default now()
 );
 
 create table sponsor_deliverables (
@@ -143,7 +147,8 @@ create table sponsor_deliverables (
   type         deliverable_type not null,
   status       deliverable_status not null default 'pending',
   due_date     date,
-  fulfilled_at timestamptz
+  fulfilled_at timestamptz,
+  created_at   timestamptz not null default now()
 );
 
 create table funds (
@@ -153,6 +158,7 @@ create table funds (
   category         text not null,
   amount_budgeted  numeric(12,2) not null default 0,
   amount_received  numeric(12,2) not null default 0,
+  created_at       timestamptz not null default now(),
   updated_at       timestamptz default now()
 );
 
@@ -166,7 +172,7 @@ create table budget_requests (
   scope_id     text not null,
   status       request_status not null default 'pending',
   approved_by  uuid references users(id),
-  created_at   timestamptz default now()
+  created_at   timestamptz not null default now()
 );
 
 create table notifications (
@@ -175,7 +181,7 @@ create table notifications (
   message    text not null,
   read       boolean not null default false,
   type       notification_type not null,
-  created_at timestamptz default now()
+  created_at timestamptz not null default now()
 );
 
 create table notification_errors (
@@ -183,7 +189,7 @@ create table notification_errors (
   notification_id uuid references notifications(id),
   error_message   text,
   retry_count     int default 0,
-  created_at      timestamptz default now()
+  created_at      timestamptz not null default now()
 );
 
 create table announcements (
@@ -194,7 +200,8 @@ create table announcements (
   scope_type scope_type,
   scope_id   text,
   pinned     boolean not null default false,
-  created_at timestamptz default now()
+  created_at timestamptz not null default now(),
+  constraint scope_pair check ((scope_type is null) = (scope_id is null))
 );
 
 create table blockers (
@@ -206,8 +213,8 @@ create table blockers (
   priority    blocker_priority not null default 'medium',
   scope_type  scope_type not null,
   scope_id    text not null,
-  resolved_by uuid references users(id),
-  created_at  timestamptz default now()
+  resolved_by uuid references users(id) on delete set null,
+  created_at  timestamptz not null default now()
 );
 
 create table resource_requests (
@@ -219,7 +226,7 @@ create table resource_requests (
   scope_id     text not null,
   status       request_status not null default 'pending',
   approved_by  uuid references users(id),
-  created_at   timestamptz default now()
+  created_at   timestamptz not null default now()
 );
 
 create table documents (
@@ -229,7 +236,7 @@ create table documents (
   uploaded_by uuid references users(id),
   scope_type  scope_type not null,
   scope_id    text not null,
-  created_at  timestamptz default now()
+  created_at  timestamptz not null default now()
 );
 
 create table competition_matches (
@@ -239,7 +246,8 @@ create table competition_matches (
   team_b         text not null,
   venue          text,
   scheduled_at   timestamptz,
-  status         match_status not null default 'scheduled'
+  status         match_status not null default 'scheduled',
+  created_at     timestamptz not null default now()
 );
 
 create table match_results (
@@ -260,7 +268,7 @@ create table team_registrations (
   payment_status payment_status not null default 'unpaid',
   confirmed      boolean not null default false,
   registered_by  uuid references users(id),
-  created_at     timestamptz default now()
+  created_at     timestamptz not null default now()
 );
 
 create table day_of_checklists (
@@ -280,7 +288,7 @@ create table volunteers (
   assigned_to_scope_id     text not null,
   role_description         text,
   confirmed                boolean not null default false,
-  created_at               timestamptz default now()
+  created_at               timestamptz not null default now()
 );
 
 create table meeting_notes (
@@ -290,26 +298,29 @@ create table meeting_notes (
   scope_type scope_type not null,
   scope_id   text not null,
   created_by uuid references users(id),
-  created_at timestamptz default now()
+  created_at timestamptz not null default now()
 );
 
 create table content_calendar_posts (
   id           uuid primary key default uuid_generate_v4(),
+  event_id     uuid references events(id) on delete cascade,
   platform     post_platform not null,
   title        text not null,
   caption      text,
   scheduled_at timestamptz,
   status       post_status not null default 'draft',
   created_by   uuid references users(id),
-  created_at   timestamptz default now()
+  created_at   timestamptz not null default now()
 );
 
 create table merch_items (
   id          uuid primary key default uuid_generate_v4(),
+  event_id    uuid references events(id) on delete cascade,
   name        text not null,
   price       numeric(10,2) not null,
   stock_total int not null default 0,
   stock_sold  int not null default 0,
+  created_at  timestamptz not null default now(),
   updated_at  timestamptz default now()
 );
 
@@ -331,5 +342,28 @@ create table activity_log (
   entity_id   uuid,
   scope_type  scope_type,
   scope_id    text,
-  created_at  timestamptz default now()
+  created_at  timestamptz not null default now(),
+  constraint scope_pair check ((scope_type is null) = (scope_id is null))
 );
+
+-- ── Indexes ────────────────────────────────────────────────
+create index on user_event_scopes (user_id);
+create index on tasks (assigned_to);
+create index on tasks (scope_type, scope_id);
+create index on notifications (user_id);
+create index on activity_log (user_id);
+create index on activity_log (entity_type, entity_id);
+create index on activity_log (scope_type, scope_id);
+create index on activity_log (created_at desc);
+create index on competition_matches (competition_id);
+create index on team_registrations (competition_id);
+create index on sponsor_interactions (sponsor_id);
+create index on sponsor_deliverables (sponsor_id);
+create index on budget_requests (requested_by);
+create index on budget_requests (scope_type, scope_id);
+create index on blockers (scope_type, scope_id);
+create index on ticket_sales (event_id);
+create index on resource_requests (scope_type, scope_id);
+create index on documents (scope_type, scope_id);
+create index on meeting_notes (scope_type, scope_id);
+create index on day_of_checklists (scope_type, scope_id);
