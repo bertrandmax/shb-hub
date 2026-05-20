@@ -11,7 +11,10 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     .select('id, email, name, role_type')
     .eq('id', user.id)
     .single()
-  if (profileError) throw profileError
+  if (profileError) {
+    if (profileError.code === 'PGRST116') return null
+    throw profileError
+  }
   if (!profile) return null
 
   const { data: scopes, error: scopesError } = await supabase
