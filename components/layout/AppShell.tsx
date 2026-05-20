@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { TopBar } from './TopBar'
 import { Sidebar } from './Sidebar'
 import type { AppUser } from '@/lib/auth/roles'
@@ -7,7 +8,7 @@ export function AppShell({
   children,
 }: {
   user: AppUser
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <div className="flex flex-col h-screen">
