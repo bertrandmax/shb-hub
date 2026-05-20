@@ -16,9 +16,9 @@ const config: Config = {
         gold:      { DEFAULT: '#a07020', light: '#fdf3d8', mid: '#c9961a' },
       },
       fontFamily: {
-        display: ['Unbounded', 'sans-serif'],
-        body:    ['Figtree', 'sans-serif'],
-        mono:    ['IBM Plex Mono', 'monospace'],
+        display: ['var(--font-display)', 'sans-serif'],
+        body:    ['var(--font-body)',    'sans-serif'],
+        mono:    ['var(--font-mono)',    'monospace'],
       },
     },
   },
