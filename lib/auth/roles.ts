@@ -1,3 +1,5 @@
+import { EVENTS } from '@/lib/constants'
+
 export const ROLE_TYPE = {
   PROJECT_MANAGER:               'project_manager',
   SHB_CUP_PM:                    'shb_cup_pm',
@@ -43,8 +45,8 @@ export function isProjectManager(role: RoleType): boolean {
 
 export function canManageEvent(role: RoleType, eventId: string): boolean {
   if (role === ROLE_TYPE.PROJECT_MANAGER) return true
-  if (role === ROLE_TYPE.SHB_CUP_PM || role === ROLE_TYPE.SHB_CUP_VICE_PM) return eventId === 'shb_cup'
-  if (role === ROLE_TYPE.RUN_PM || role === ROLE_TYPE.RUN_VICE_PM) return eventId === '5k_run'
+  if (role === ROLE_TYPE.SHB_CUP_PM || role === ROLE_TYPE.SHB_CUP_VICE_PM) return eventId === EVENTS.SHB_CUP
+  if (role === ROLE_TYPE.RUN_PM || role === ROLE_TYPE.RUN_VICE_PM) return eventId === EVENTS.RUN
   return false
 }
 
@@ -56,14 +58,16 @@ export function canEditFunds(role: RoleType): boolean {
   return role === ROLE_TYPE.PROJECT_MANAGER || role === ROLE_TYPE.MARKETING_HEAD
 }
 
+const SCORE_RECORDING_ROLES = new Set<RoleType>([
+  ROLE_TYPE.PROJECT_MANAGER,
+  ROLE_TYPE.SHB_CUP_PM,
+  ROLE_TYPE.SHB_CUP_VICE_PM,
+  ROLE_TYPE.COMPETITION_COORDINATOR,
+  ROLE_TYPE.COMPETITION_VICE_COORDINATOR,
+  ROLE_TYPE.COMPETITION_PIC_HEAD,
+  ROLE_TYPE.COMPETITION_PIC_VICE,
+])
+
 export function canRecordScores(role: RoleType): boolean {
-  return [
-    ROLE_TYPE.PROJECT_MANAGER,
-    ROLE_TYPE.SHB_CUP_PM,
-    ROLE_TYPE.SHB_CUP_VICE_PM,
-    ROLE_TYPE.COMPETITION_COORDINATOR,
-    ROLE_TYPE.COMPETITION_VICE_COORDINATOR,
-    ROLE_TYPE.COMPETITION_PIC_HEAD,
-    ROLE_TYPE.COMPETITION_PIC_VICE,
-  ].includes(role)
+  return SCORE_RECORDING_ROLES.has(role)
 }
