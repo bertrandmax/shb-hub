@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
+import { type RoleType } from '@/lib/auth/roles'
 
 export interface InviteTokenData {
   id:         string
   email:      string
-  role_type:  string
+  role_type:  RoleType
   scope_type: string
   scope_id:   string
 }
