@@ -37,3 +37,19 @@ export async function updateRequestStatus(id: string, status: string) {
 
   revalidatePath('/resources')
 }
+
+export async function approveResourceRequest(id: string) {
+  const supabase = await createClient()
+  const user = await getCurrentUser()
+  if (!user) throw new Error('Unauthenticated')
+  await supabase.from('resource_requests').update({ status: 'approved' }).eq('id', id)
+  revalidatePath('/resources')
+}
+
+export async function rejectResourceRequest(id: string) {
+  const supabase = await createClient()
+  const user = await getCurrentUser()
+  if (!user) throw new Error('Unauthenticated')
+  await supabase.from('resource_requests').update({ status: 'rejected' }).eq('id', id)
+  revalidatePath('/resources')
+}

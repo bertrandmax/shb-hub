@@ -5,6 +5,8 @@ import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { createBudgetRequest, approveBudgetRequest, rejectBudgetRequest } from './actions'
+import { isProjectManager } from '@/lib/auth/roles'
 
 type RequestStatus = 'pending' | 'approved' | 'rejected' | 'fulfilled'
 
@@ -32,6 +34,8 @@ function GapCell({ gap }: { gap: number }) {
 export default async function FundsPage() {
   const user = await getCurrentUser()
   if (!user) redirect('/login')
+
+  const isPM = isProjectManager(user.role_type)
 
   const supabase = await createClient()
 
@@ -138,6 +142,83 @@ export default async function FundsPage() {
             Budget Requests
           </h2>
 
+          {/* New Budget Request inline form */}
+          <Card>
+            <details>
+              <summary className="cursor-pointer text-xs font-mono font-semibold uppercase tracking-widest text-[#1d3fa0] hover:text-[#1a3690] select-none">
+                + New Request
+              </summary>
+              <form action={createBudgetRequest} className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2 flex flex-col gap-1">
+                  <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Title</label>
+                  <input
+                    name="title"
+                    type="text"
+                    required
+                    placeholder="Request title"
+                    className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm font-body text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Amount MYR</label>
+                  <input
+                    name="amount"
+                    type="number"
+                    required
+                    min="0"
+                    step="0.01"
+                    placeholder="0"
+                    className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm font-body text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Scope Type</label>
+                  <select
+                    name="scope_type"
+                    className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm font-body text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]"
+                  >
+                    <option value="">None</option>
+                    <option value="global">Global</option>
+                    <option value="event">Event</option>
+                    <option value="competition">Competition</option>
+                    <option value="division">Division</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2 flex flex-col gap-1">
+                  <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Scope ID</label>
+                  <input
+                    name="scope_id"
+                    type="text"
+                    placeholder="e.g. event UUID"
+                    className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm font-body text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 flex flex-col gap-1">
+                  <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Reason</label>
+                  <textarea
+                    name="reason"
+                    rows={3}
+                    placeholder="Explain why this budget is needed…"
+                    className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm font-body text-slate-800 resize-none placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 flex justify-end">
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center font-semibold rounded-xl transition-colors font-body px-4 py-2.5 text-sm bg-[#1d3fa0] hover:bg-[#1a3690] text-white"
+                  >
+                    Submit Request
+                  </button>
+                </div>
+              </form>
+            </details>
+          </Card>
+
           {allRequests.length === 0 ? (
             <EmptyState icon="📋" title="No requests" description="No budget requests have been submitted." />
           ) : (
@@ -164,6 +245,20 @@ export default async function FundsPage() {
                         Requested by {r.users?.name ?? 'unknown'} ·{' '}
                         {new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
+                      {isPM && r.status === 'pending' && (
+                        <div className="flex gap-2 mt-2">
+                          <form action={approveBudgetRequest.bind(null, r.id)}>
+                            <button type="submit" className="px-3 py-1 text-xs font-mono font-semibold rounded-lg bg-green-100 text-green-700 hover:bg-green-200 border border-green-200 transition-colors">
+                              Approve
+                            </button>
+                          </form>
+                          <form action={rejectBudgetRequest.bind(null, r.id)}>
+                            <button type="submit" className="px-3 py-1 text-xs font-mono font-semibold rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors">
+                              Reject
+                            </button>
+                          </form>
+                        </div>
+                      )}
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="font-display text-lg font-black text-[#1d3fa0]">{fmt(r.amount)}</p>

@@ -29,6 +29,9 @@ export async function flagBlocker(formData: FormData) {
 }
 
 export async function updateBlockerStatus(id: string, status: string) {
+  const user = await getCurrentUser()
+  if (!user) throw new Error('Unauthenticated')
+
   const supabase = await createClient()
   await supabase.from('blockers').update({ status }).eq('id', id)
   revalidatePath('/blockers')

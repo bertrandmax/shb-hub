@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/get-user'
 import { revalidatePath } from 'next/cache'
 
 export async function addVolunteer(formData: FormData) {
@@ -23,8 +24,10 @@ export async function addVolunteer(formData: FormData) {
   revalidatePath('/admin/volunteers')
 }
 
-export async function toggleConfirmed(id: string, confirmed: boolean) {
+export async function toggleVolunteerConfirmed(id: string, confirmed: boolean) {
   const supabase = await createClient()
+  const user = await getCurrentUser()
+  if (!user) throw new Error('Unauthenticated')
 
   await supabase
     .from('volunteers')

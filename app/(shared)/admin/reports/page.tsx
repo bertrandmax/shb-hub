@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 
 function fmtMoney(n: number) {
-  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return new Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR', minimumFractionDigits: 0 }).format(n)
 }
 
 async function getReportData() {
@@ -18,10 +18,10 @@ async function getReportData() {
     { data: blockers },
     { data: funds },
   ] = await Promise.all([
-    supabase.from('sponsors').select('id, status, pledge_amount, received_amount'),
+    supabase.from('sponsors').select('id, status, amount_pledged, amount_received'),
     supabase.from('tasks').select('id, status'),
     supabase.from('blockers').select('id, status, priority'),
-    supabase.from('funds').select('id, budgeted_amount, received_amount'),
+    supabase.from('funds').select('id, amount_budgeted, amount_received'),
   ])
 
   return {
@@ -39,8 +39,8 @@ export default async function ReportsPage() {
   const { sponsors, tasks, blockers, funds } = await getReportData()
 
   // ── Sponsor summary ─────────────────────────────────────────────────────────
-  const totalPledged  = sponsors.reduce((s: number, sp: any) => s + (sp.pledge_amount    ?? 0), 0)
-  const totalReceived = sponsors.reduce((s: number, sp: any) => s + (sp.received_amount  ?? 0), 0)
+  const totalPledged  = sponsors.reduce((s: number, sp: any) => s + (sp.amount_pledged   ?? 0), 0)
+  const totalReceived = sponsors.reduce((s: number, sp: any) => s + (sp.amount_received  ?? 0), 0)
 
   const sponsorByStatus = sponsors.reduce((acc: Record<string, number>, sp: any) => {
     acc[sp.status] = (acc[sp.status] ?? 0) + 1
@@ -65,8 +65,8 @@ export default async function ReportsPage() {
   }, {})
 
   // ── Fund summary ─────────────────────────────────────────────────────────────
-  const totalBudgeted     = funds.reduce((s: number, f: any) => s + (f.budgeted_amount  ?? 0), 0)
-  const totalFundsReceived = funds.reduce((s: number, f: any) => s + (f.received_amount ?? 0), 0)
+  const totalBudgeted     = funds.reduce((s: number, f: any) => s + (f.amount_budgeted  ?? 0), 0)
+  const totalFundsReceived = funds.reduce((s: number, f: any) => s + (f.amount_received ?? 0), 0)
   const fundGap           = totalBudgeted - totalFundsReceived
 
   const SPONSOR_STATUS_VARIANTS: Record<string, 'gold' | 'green' | 'red' | 'slate'> = {
@@ -83,9 +83,9 @@ export default async function ReportsPage() {
   }
 
   const BLOCKER_STATUS_VARIANTS: Record<string, 'red' | 'gold' | 'green' | 'slate'> = {
-    open:     'red',
-    in_review: 'gold',
-    resolved: 'green',
+    open:        'red',
+    in_progress: 'gold',
+    resolved:    'green',
   }
 
   const PRIORITY_VARIANTS: Record<string, 'red' | 'gold' | 'slate'> = {
@@ -108,16 +108,16 @@ export default async function ReportsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-1">Total Pledged</p>
-              <p className="font-display text-2xl font-black text-[#1d3fa0]">${fmtMoney(totalPledged)}</p>
+              <p className="font-display text-2xl font-black text-[#1d3fa0]">{fmtMoney(totalPledged)}</p>
             </Card>
             <Card>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-1">Total Received</p>
-              <p className="font-display text-2xl font-black text-green-700">${fmtMoney(totalReceived)}</p>
+              <p className="font-display text-2xl font-black text-green-700">{fmtMoney(totalReceived)}</p>
             </Card>
             <Card>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-1">Outstanding</p>
               <p className={`font-display text-2xl font-black ${totalPledged - totalReceived > 0 ? 'text-[#a07020]' : 'text-green-700'}`}>
-                ${fmtMoney(totalPledged - totalReceived)}
+                {fmtMoney(totalPledged - totalReceived)}
               </p>
             </Card>
           </div>
@@ -223,16 +223,16 @@ export default async function ReportsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-1">Total Budgeted</p>
-              <p className="font-display text-2xl font-black text-[#1d3fa0]">${fmtMoney(totalBudgeted)}</p>
+              <p className="font-display text-2xl font-black text-[#1d3fa0]">{fmtMoney(totalBudgeted)}</p>
             </Card>
             <Card>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-1">Total Received</p>
-              <p className="font-display text-2xl font-black text-green-700">${fmtMoney(totalFundsReceived)}</p>
+              <p className="font-display text-2xl font-black text-green-700">{fmtMoney(totalFundsReceived)}</p>
             </Card>
             <Card>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-1">Gap</p>
               <p className={`font-display text-2xl font-black ${fundGap > 0 ? 'text-[#a07020]' : 'text-green-700'}`}>
-                ${fmtMoney(Math.abs(fundGap))}
+                {fmtMoney(Math.abs(fundGap))}
                 {fundGap < 0 && <span className="text-xs font-body font-normal text-green-600 ml-1">surplus</span>}
               </p>
             </Card>

@@ -5,7 +5,8 @@ import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { createResourceRequest } from './actions'
+import { createResourceRequest, approveResourceRequest, rejectResourceRequest } from './actions'
+import { isProjectManager } from '@/lib/auth/roles'
 
 type RequestStatus = 'pending' | 'approved' | 'rejected' | 'fulfilled'
 
@@ -45,6 +46,8 @@ export default async function ResourcesPage({
 }) {
   const user = await getCurrentUser()
   if (!user) redirect('/login')
+
+  const isPM = isProjectManager(user.role_type)
 
   const supabase = await createClient()
 
@@ -122,6 +125,26 @@ export default async function ResourcesPage({
                       <p className="text-[10px] font-mono text-slate-400 mt-2">
                         {req.users?.name ?? 'Unknown'} · {fmt(req.created_at)}
                       </p>
+                      {isPM && req.status === 'pending' && (
+                        <div className="flex gap-2 mt-3">
+                          <form action={approveResourceRequest.bind(null, req.id)}>
+                            <button
+                              type="submit"
+                              className="px-3 py-1 text-xs font-mono font-semibold rounded-lg bg-green-100 text-green-700 hover:bg-green-200 border border-green-200 transition-colors"
+                            >
+                              Approve
+                            </button>
+                          </form>
+                          <form action={rejectResourceRequest.bind(null, req.id)}>
+                            <button
+                              type="submit"
+                              className="px-3 py-1 text-xs font-mono font-semibold rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors"
+                            >
+                              Reject
+                            </button>
+                          </form>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Card>

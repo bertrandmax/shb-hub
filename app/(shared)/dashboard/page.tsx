@@ -12,6 +12,7 @@ async function getDashboardStats() {
     { count: pendingBudget },
     { count: totalTasks },
     { count: doneTasks },
+    { count: overdueFollowups },
     { data: milestones },
     { data: recentActivity },
   ] = await Promise.all([
@@ -20,6 +21,11 @@ async function getDashboardStats() {
     supabase.from('budget_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('tasks').select('*', { count: 'exact', head: true }),
     supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('status', 'done'),
+    supabase
+      .from('sponsors')
+      .select('*', { count: 'exact', head: true })
+      .lt('next_followup_date', new Date().toISOString().split('T')[0])
+      .neq('status', 'declined'),
     supabase.from('event_milestones')
       .select('id, title, date, status, events(name)')
       .eq('status', 'upcoming')
@@ -31,13 +37,14 @@ async function getDashboardStats() {
       .limit(8),
   ])
   return {
-    openBlockers:    openBlockers  ?? 0,
-    pendingRequests: pendingRequests ?? 0,
-    pendingBudget:   pendingBudget ?? 0,
-    totalTasks:      totalTasks  ?? 0,
-    doneTasks:       doneTasks   ?? 0,
-    milestones:      milestones  ?? [],
-    recentActivity:  recentActivity ?? [],
+    openBlockers:     openBlockers     ?? 0,
+    pendingRequests:  pendingRequests  ?? 0,
+    pendingBudget:    pendingBudget    ?? 0,
+    totalTasks:       totalTasks       ?? 0,
+    doneTasks:        doneTasks        ?? 0,
+    overdueFollowups: overdueFollowups ?? 0,
+    milestones:       milestones       ?? [],
+    recentActivity:   recentActivity   ?? [],
   }
 }
 
@@ -65,11 +72,44 @@ export default async function DashboardPage() {
         </h1>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Open Blockers"     value={stats.openBlockers}    color={stats.openBlockers > 0    ? 'text-red-600'    : 'text-green-700'} />
-          <StatCard label="Pending Resources" value={stats.pendingRequests} color={stats.pendingRequests > 0 ? 'text-[#a07020]'  : 'text-green-700'} />
-          <StatCard label="Budget Requests"   value={stats.pendingBudget}   color={stats.pendingBudget > 0   ? 'text-[#a07020]'  : 'text-green-700'} />
+          <StatCard label="Open Blockers"     value={stats.openBlockers}    color={stats.openBlockers > 0    ? 'text-red-600'   : 'text-green-700'} />
+          <StatCard label="Pending Resources" value={stats.pendingRequests} color={stats.pendingRequests > 0 ? 'text-[#a07020]' : 'text-green-700'} />
+          <StatCard label="Budget Requests"   value={stats.pendingBudget}   color={stats.pendingBudget > 0   ? 'text-[#a07020]' : 'text-green-700'} />
           <StatCard label="Task Completion"   value={`${taskPct}%`}         color="text-[#1d3fa0]" />
+          <StatCard label="Follow-ups Due"    value={stats.overdueFollowups} color={stats.overdueFollowups > 0 ? 'text-[#a07020]' : 'text-green-700'} />
         </div>
+
+        <Card>
+          <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-3">
+            Quick Actions
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href="/blockers"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border border-[#dde3ef] text-slate-600 hover:border-[#1d3fa0] hover:text-[#1d3fa0] hover:bg-[#f0f2f8] transition-colors"
+            >
+              + Flag Blocker
+            </a>
+            <a
+              href="/resources"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border border-[#dde3ef] text-slate-600 hover:border-[#1d3fa0] hover:text-[#1d3fa0] hover:bg-[#f0f2f8] transition-colors"
+            >
+              + Resource Request
+            </a>
+            <a
+              href="/funds"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border border-[#dde3ef] text-slate-600 hover:border-[#1d3fa0] hover:text-[#1d3fa0] hover:bg-[#f0f2f8] transition-colors"
+            >
+              + Budget Request
+            </a>
+            <a
+              href="/sponsors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border border-[#dde3ef] text-slate-600 hover:border-[#a07020] hover:text-[#a07020] hover:bg-[#f0f2f8] transition-colors"
+            >
+              View Follow-ups →
+            </a>
+          </div>
+        </Card>
 
         <Card>
           <div className="flex items-center justify-between mb-2">

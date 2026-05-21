@@ -2,8 +2,13 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { getCurrentUser } from '@/lib/auth/get-user'
+import { isProjectManager } from '@/lib/auth/roles'
 
 export async function addSponsor(formData: FormData) {
+  const user = await getCurrentUser()
+  if (!user || !isProjectManager(user.role_type)) throw new Error('Unauthorized')
+
   const supabase = await createClient()
 
   const company_name       = formData.get('company_name') as string

@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { addVolunteer } from './actions'
+import { VolunteerConfirmToggle } from './VolunteerConfirmToggle'
 
 const SCOPE_TYPE_OPTIONS = [
   { value: 'global',      label: 'Global' },
@@ -70,9 +71,7 @@ export default async function VolunteersPage() {
                         )}
                       </td>
                       <td className="py-3">
-                        <Badge variant={v.confirmed ? 'green' : 'slate'}>
-                          {v.confirmed ? 'Confirmed' : 'Unconfirmed'}
-                        </Badge>
+                        <VolunteerConfirmToggle id={v.id} confirmed={v.confirmed ?? false} />
                       </td>
                     </tr>
                   ))}
