@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/Badge'
 import type { AppUser } from '@/lib/auth/roles'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -16,15 +15,37 @@ const ROLE_LABELS: Record<string, string> = {
   marketing_head:               'Mktg Head',
 }
 
+function initials(name: string) {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
+}
+
 export function TopBar({ user }: { user: AppUser }) {
+  const roleLabel = ROLE_LABELS[user.role_type] ?? user.role_type
+
   return (
-    <header className="h-14 bg-[#1d3fa0] flex items-center px-5 gap-4 shrink-0">
-      <span className="font-display font-black text-white text-lg tracking-widest uppercase">
+    <header className="h-14 bg-[#1d3fa0] shadow-topbar flex items-center px-5 gap-4 shrink-0 z-10 relative">
+      <span className="font-display font-black text-white text-lg tracking-widest uppercase select-none">
         SHB Hub
       </span>
+
       <div className="ml-auto flex items-center gap-3">
-        <Badge variant="gold">{ROLE_LABELS[user.role_type] ?? user.role_type}</Badge>
-        <span className="text-white/70 text-sm font-body">{user.name}</span>
+        <span className="hidden sm:block px-2 py-0.5 rounded-md bg-[#a07020]/30 text-[#fdf3d8] text-[10px] font-mono font-semibold tracking-widest uppercase border border-[#a07020]/40">
+          {roleLabel}
+        </span>
+
+        <div className="flex items-center gap-2">
+          <span className="text-white/60 text-sm font-body hidden sm:block">{user.name}</span>
+          <div className="w-8 h-8 rounded-full bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
+            <span className="text-white text-[11px] font-display font-bold tracking-wide">
+              {initials(user.name)}
+            </span>
+          </div>
+        </div>
       </div>
     </header>
   )
