@@ -1,7 +1,8 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { ROLE_TYPE, type RoleType, type AppUser } from '@/lib/auth/roles'
 
-export async function getCurrentUser(): Promise<AppUser | null> {
+export const getCurrentUser = cache(async (): Promise<AppUser | null> => {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
@@ -35,4 +36,4 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     role_type: role,
     scopes:    scopes ?? [],
   }
-}
+})
