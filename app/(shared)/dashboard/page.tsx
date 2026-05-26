@@ -1,7 +1,5 @@
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { fmtIDR } from '@/lib/format'
@@ -116,8 +114,7 @@ function budgetBarColor(pct: number) {
 }
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
+  const user = (await getCurrentUser())!
 
   const stats     = await getDashboardStats(user.id)
   const taskPct   = stats.totalTasks > 0 ? Math.round((stats.doneTasks / stats.totalTasks) * 100) : 0
@@ -125,7 +122,6 @@ export default async function DashboardPage() {
   const countdown = getEventCountdown()
 
   return (
-    <AppShell user={user}>
       <div className="max-w-5xl space-y-5">
         <div className="animate-fade-up stagger-1">
           <h1 className="font-display text-xl font-black uppercase tracking-tight text-[#1d3fa0]">
@@ -326,6 +322,5 @@ export default async function DashboardPage() {
           </Card>
         </div>
       </div>
-    </AppShell>
   )
 }

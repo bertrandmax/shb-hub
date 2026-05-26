@@ -1,7 +1,5 @@
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -42,8 +40,7 @@ export default async function SponsorsPage({
 }: {
   searchParams: { status?: string }
 }) {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
+  const user = (await getCurrentUser())!
 
   const supabase = await createClient()
   const { data: sponsors } = await supabase
@@ -64,7 +61,6 @@ export default async function SponsorsPage({
   const isPM = isProjectManager(user.role_type)
 
   return (
-    <AppShell user={user}>
       <div className="max-w-5xl space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -226,6 +222,5 @@ export default async function SponsorsPage({
           )}
         </Card>
       </div>
-    </AppShell>
   )
 }

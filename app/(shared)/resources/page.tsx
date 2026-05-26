@@ -1,7 +1,5 @@
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -44,8 +42,7 @@ export default async function ResourcesPage({
 }: {
   searchParams: { status?: string }
 }) {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
+  const user = (await getCurrentUser())!
 
   const isPM = isProjectManager(user.role_type)
 
@@ -70,7 +67,6 @@ export default async function ResourcesPage({
   }
 
   return (
-    <AppShell user={user}>
       <div className="max-w-4xl space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -216,6 +212,5 @@ export default async function ResourcesPage({
           </details>
         </Card>
       </div>
-    </AppShell>
   )
 }

@@ -1,7 +1,5 @@
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -28,8 +26,7 @@ function GapCell({ gap }: { gap: number }) {
 }
 
 export default async function FundsPage() {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
+  const user = (await getCurrentUser())!
 
   const isPM = isProjectManager(user.role_type)
 
@@ -61,7 +58,6 @@ export default async function FundsPage() {
   const totalGap      = totalBudgeted - totalReceived
 
   return (
-    <AppShell user={user}>
       <div className="max-w-5xl space-y-8">
         {/* Header */}
         <h1 className="font-display text-2xl font-black uppercase tracking-tight text-[#1d3fa0]">
@@ -266,6 +262,5 @@ export default async function FundsPage() {
           )}
         </section>
       </div>
-    </AppShell>
   )
 }
