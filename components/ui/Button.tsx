@@ -17,7 +17,7 @@ export function Button({
     <button
       className={cn(
         'inline-flex items-center justify-center font-semibold rounded-xl cursor-pointer',
-        'font-body transition-all duration-150 ease-out',
+        'font-body transition-[color,background-color,box-shadow,transform,opacity] duration-100 ease-out',
         'active:scale-[0.97] active:brightness-95',
         'disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100',
         size === 'md' && 'px-4 py-2.5 text-sm gap-1.5',
