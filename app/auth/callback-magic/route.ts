@@ -1,8 +1,10 @@
+import { getRequestOrigin } from '@/lib/get-origin'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
+  const origin = getRequestOrigin(request)
   const token_hash = searchParams.get('token_hash')
 
   if (!token_hash) {

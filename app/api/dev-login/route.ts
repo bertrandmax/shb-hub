@@ -1,8 +1,9 @@
+import { getRequestOrigin } from '@/lib/get-origin'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // DEV ONLY — authenticates the PM user without OAuth, for automated testing
-export async function GET() {
+export async function GET(request: Request) {
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'not available' }, { status: 404 })
   }
@@ -19,6 +20,7 @@ export async function GET() {
   }
 
   const token_hash = data.properties.hashed_token
-  const url = `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback-magic?token_hash=${token_hash}`
+  const origin = getRequestOrigin(request)
+  const url = `${origin}/auth/callback-magic?token_hash=${token_hash}`
   return NextResponse.redirect(url)
 }

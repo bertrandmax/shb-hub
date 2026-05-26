@@ -1,13 +1,15 @@
+import { getOrigin } from '@/lib/get-origin'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 async function signInWithGoogle() {
   'use server'
   const supabase = await createClient()
+  const origin = getOrigin()
   const { data } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      redirectTo: `${origin}/auth/callback`,
     },
   })
   if (data.url) redirect(data.url)
