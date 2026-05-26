@@ -1,4 +1,5 @@
 import type { AppUser } from '@/lib/auth/roles'
+import { NotificationBell } from './NotificationBell'
 
 const ROLE_LABELS: Record<string, string> = {
   project_manager:              'PM',
@@ -24,7 +25,7 @@ function initials(name: string) {
     .toUpperCase()
 }
 
-export function TopBar({ user, onToggle }: { user: AppUser; onToggle?: () => void }) {
+export function TopBar({ user, onToggle, userId }: { user: AppUser; onToggle?: () => void; userId: string }) {
   const roleLabel = ROLE_LABELS[user.role_type] ?? user.role_type
 
   return (
@@ -49,6 +50,8 @@ export function TopBar({ user, onToggle }: { user: AppUser; onToggle?: () => voi
         <span className="hidden sm:block px-2 py-0.5 rounded-md bg-[#a07020]/30 text-[#fdf3d8] text-[10px] font-mono font-semibold tracking-widest uppercase border border-[#a07020]/40">
           {roleLabel}
         </span>
+
+        <NotificationBell userId={userId} />
 
         <div className="flex items-center gap-2">
           <span className="text-white/60 text-sm font-body hidden sm:block">{user.name}</span>

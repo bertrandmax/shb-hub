@@ -24,7 +24,7 @@ export function AppShell({
 
   return (
     <div className="flex flex-col h-screen bg-sidebar">
-      <TopBar user={user} onToggle={() => setSidebarOpen(o => !o)} />
+      <TopBar user={user} onToggle={() => setSidebarOpen(o => !o)} userId={user.id} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar user={user} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <main className="flex-1 overflow-y-auto bg-page p-4 md:p-6 rounded-tl-xl animate-fade-up">

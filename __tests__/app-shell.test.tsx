@@ -1,3 +1,17 @@
+vi.mock('@/lib/supabase/client', () => ({
+  createClient: () => ({
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          order: () => ({
+            limit: () => Promise.resolve({ data: [], error: null }),
+          }),
+        }),
+      }),
+    }),
+  }),
+}))
+
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => '/dashboard'),
 }))
