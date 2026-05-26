@@ -9,6 +9,10 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  button, a, [role="button"], summary {
+    touch-action: manipulation;
+  }
+
   html {
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -41,11 +45,15 @@
 
 @layer utilities {
   .animate-fade-up {
-    animation: fadeUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: fadeUp 0.15s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .animate-fade-in {
     animation: fadeIn 0.2s ease both;
+  }
+
+  .animate-nav-progress {
+    animation: navProgress 1s ease-in-out infinite;
   }
 
   .stagger-1 { animation-delay: 0.04s; }
@@ -68,4 +76,9 @@
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+@keyframes navProgress {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
 }
