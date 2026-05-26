@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { createBudgetRequest, approveBudgetRequest, rejectBudgetRequest } from './actions'
 import { isProjectManager } from '@/lib/auth/roles'
+import { fmtIDR } from '@/lib/format'
 
 type RequestStatus = 'pending' | 'approved' | 'rejected' | 'fulfilled'
 
@@ -17,16 +18,11 @@ const REQUEST_STATUS_BADGE: Record<RequestStatus, 'gold' | 'green' | 'red' | 'bl
   fulfilled: 'blue',
 }
 
-function fmt(value: number | null) {
-  if (value == null) return '—'
-  return new Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR', minimumFractionDigits: 0 }).format(value)
-}
-
 function GapCell({ gap }: { gap: number }) {
   const isPositive = gap >= 0
   return (
     <span className={['font-mono tabular-nums text-sm font-semibold', isPositive ? 'text-green-700' : 'text-red-600'].join(' ')}>
-      {isPositive ? '+' : ''}{fmt(gap)}
+      {isPositive ? '+' : ''}{fmtIDR(gap)}
     </span>
   )
 }
@@ -76,16 +72,16 @@ export default async function FundsPage() {
         <div className="grid grid-cols-3 gap-4">
           <Card>
             <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-0.5">Total Budgeted</p>
-            <p className="font-display text-2xl font-black text-[#1d3fa0]">{fmt(totalBudgeted)}</p>
+            <p className="font-display text-2xl font-black text-[#1d3fa0]">{fmtIDR(totalBudgeted)}</p>
           </Card>
           <Card>
             <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-0.5">Total Received</p>
-            <p className="font-display text-2xl font-black text-green-700">{fmt(totalReceived)}</p>
+            <p className="font-display text-2xl font-black text-green-700">{fmtIDR(totalReceived)}</p>
           </Card>
           <Card>
             <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-0.5">Overall Gap</p>
             <p className={['font-display text-2xl font-black', totalGap >= 0 ? 'text-green-700' : 'text-red-600'].join(' ')}>
-              {totalGap >= 0 ? '+' : ''}{fmt(totalGap)}
+              {totalGap >= 0 ? '+' : ''}{fmtIDR(totalGap)}
             </p>
           </Card>
         </div>
@@ -122,8 +118,8 @@ export default async function FundsPage() {
                           <tr key={f.id} className="hover:bg-[#f0f2f8]/60 transition-colors">
                             <td className="px-4 py-3 font-semibold text-slate-800">{f.category}</td>
                             <td className="px-4 py-3 font-mono text-xs text-slate-500">{f.scope_id ?? '—'}</td>
-                            <td className="px-4 py-3 text-right font-mono tabular-nums text-slate-700">{fmt(f.amount_budgeted)}</td>
-                            <td className="px-4 py-3 text-right font-mono tabular-nums text-slate-700">{fmt(f.amount_received)}</td>
+                            <td className="px-4 py-3 text-right font-mono tabular-nums text-slate-700">{fmtIDR(f.amount_budgeted)}</td>
+                            <td className="px-4 py-3 text-right font-mono tabular-nums text-slate-700">{fmtIDR(f.amount_received)}</td>
                             <td className="px-4 py-3 text-right"><GapCell gap={gap} /></td>
                           </tr>
                         )
@@ -161,7 +157,7 @@ export default async function FundsPage() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Amount MYR</label>
+                  <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Amount (IDR)</label>
                   <input
                     name="amount"
                     type="number"
@@ -261,7 +257,7 @@ export default async function FundsPage() {
                       )}
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="font-display text-lg font-black text-[#1d3fa0]">{fmt(r.amount)}</p>
+                      <p className="font-display text-lg font-black text-[#1d3fa0]">{fmtIDR(r.amount)}</p>
                     </div>
                   </div>
                 </Card>

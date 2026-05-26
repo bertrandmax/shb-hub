@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { isProjectManager } from '@/lib/auth/roles'
 import { addSponsor } from './actions'
 import { SponsorStatusSelect } from './SponsorStatusSelect'
+import { fmtIDR } from '@/lib/format'
 
 type SponsorStatus = 'prospect' | 'contacted' | 'committed' | 'declined'
 
@@ -35,11 +36,6 @@ const FILTER_OPTIONS = [
   { value: 'committed', label: 'Committed' },
   { value: 'declined',  label: 'Declined' },
 ]
-
-function fmt(value: number | null) {
-  if (value == null) return '—'
-  return new Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR', minimumFractionDigits: 0 }).format(value)
-}
 
 export default async function SponsorsPage({
   searchParams,
@@ -85,13 +81,13 @@ export default async function SponsorsPage({
           <Card className="flex items-center gap-4">
             <div>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-0.5">Total Pledged</p>
-              <p className="font-display text-2xl font-black text-[#1d3fa0]">{fmt(totalPledged)}</p>
+              <p className="font-display text-2xl font-black text-[#1d3fa0]">{fmtIDR(totalPledged)}</p>
             </div>
           </Card>
           <Card className="flex items-center gap-4">
             <div>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-0.5">Total Received</p>
-              <p className="font-display text-2xl font-black text-green-700">{fmt(totalReceived)}</p>
+              <p className="font-display text-2xl font-black text-green-700">{fmtIDR(totalReceived)}</p>
             </div>
           </Card>
         </div>
@@ -212,10 +208,10 @@ export default async function SponsorsPage({
                         }
                       </td>
                       <td className="px-4 py-3 text-right font-mono tabular-nums text-slate-700">
-                        {fmt(s.amount_pledged)}
+                        {fmtIDR(s.amount_pledged)}
                       </td>
                       <td className="px-4 py-3 text-right font-mono tabular-nums text-slate-700">
-                        {fmt(s.amount_received)}
+                        {fmtIDR(s.amount_received)}
                       </td>
                       <td className="px-4 py-3 font-mono text-xs text-slate-500">
                         {s.next_followup_date

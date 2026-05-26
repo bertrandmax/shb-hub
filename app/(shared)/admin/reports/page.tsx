@@ -5,9 +5,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR', minimumFractionDigits: 0 }).format(n)
-}
+import { fmtIDR } from '@/lib/format'
 
 async function getReportData() {
   const supabase = await createClient()
@@ -108,16 +106,16 @@ export default async function ReportsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-1">Total Pledged</p>
-              <p className="font-display text-2xl font-black text-[#1d3fa0]">{fmtMoney(totalPledged)}</p>
+              <p className="font-display text-2xl font-black text-[#1d3fa0]">{fmtIDR(totalPledged)}</p>
             </Card>
             <Card>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-1">Total Received</p>
-              <p className="font-display text-2xl font-black text-green-700">{fmtMoney(totalReceived)}</p>
+              <p className="font-display text-2xl font-black text-green-700">{fmtIDR(totalReceived)}</p>
             </Card>
             <Card>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-1">Outstanding</p>
               <p className={`font-display text-2xl font-black ${totalPledged - totalReceived > 0 ? 'text-[#a07020]' : 'text-green-700'}`}>
-                {fmtMoney(totalPledged - totalReceived)}
+                {fmtIDR(totalPledged - totalReceived)}
               </p>
             </Card>
           </div>
@@ -223,16 +221,16 @@ export default async function ReportsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-1">Total Budgeted</p>
-              <p className="font-display text-2xl font-black text-[#1d3fa0]">{fmtMoney(totalBudgeted)}</p>
+              <p className="font-display text-2xl font-black text-[#1d3fa0]">{fmtIDR(totalBudgeted)}</p>
             </Card>
             <Card>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-1">Total Received</p>
-              <p className="font-display text-2xl font-black text-green-700">{fmtMoney(totalFundsReceived)}</p>
+              <p className="font-display text-2xl font-black text-green-700">{fmtIDR(totalFundsReceived)}</p>
             </Card>
             <Card>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-1">Gap</p>
               <p className={`font-display text-2xl font-black ${fundGap > 0 ? 'text-[#a07020]' : 'text-green-700'}`}>
-                {fmtMoney(Math.abs(fundGap))}
+                {fmtIDR(Math.abs(fundGap))}
                 {fundGap < 0 && <span className="text-xs font-body font-normal text-green-600 ml-1">surplus</span>}
               </p>
             </Card>

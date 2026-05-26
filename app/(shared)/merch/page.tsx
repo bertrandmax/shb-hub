@@ -3,10 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
-
-function fmt(n: number) {
-  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+import { fmtIDR } from '@/lib/format'
 
 export default async function MerchPage() {
   const user = await getCurrentUser()
@@ -64,7 +61,7 @@ export default async function MerchPage() {
                         <tr key={item.id} className="border-b border-[#dde3ef] last:border-0">
                           <td className="py-3 pr-4 font-semibold text-slate-800">{item.name}</td>
                           <td className="py-3 pr-4 text-slate-500 text-xs font-mono">{item.events?.name ?? '—'}</td>
-                          <td className="py-3 pr-4 text-right font-mono text-slate-700">${fmt(item.price ?? 0)}</td>
+                          <td className="py-3 pr-4 text-right font-mono text-slate-700">${fmtIDR(item.price ?? 0)}</td>
                           <td className="py-3 pr-4 text-right font-mono text-slate-500">{item.stock_total ?? 0}</td>
                           <td className="py-3 pr-4 text-right font-mono text-slate-500">{item.stock_sold ?? 0}</td>
                           <td className={`py-3 text-right font-mono font-semibold ${remaining <= 0 ? 'text-red-600' : remaining < 10 ? 'text-[#a07020]' : 'text-green-700'}`}>
@@ -104,9 +101,9 @@ export default async function MerchPage() {
                         <tr key={t.id} className="border-b border-[#dde3ef] last:border-0">
                           <td className="py-3 pr-4 font-semibold text-slate-800">{t.ticket_type}</td>
                           <td className="py-3 pr-4 text-slate-500 text-xs font-mono">{t.events?.name ?? '—'}</td>
-                          <td className="py-3 pr-4 text-right font-mono text-slate-700">${fmt(t.price ?? 0)}</td>
+                          <td className="py-3 pr-4 text-right font-mono text-slate-700">${fmtIDR(t.price ?? 0)}</td>
                           <td className="py-3 pr-4 text-right font-mono text-slate-500">{t.quantity_sold ?? 0}</td>
-                          <td className="py-3 text-right font-mono font-semibold text-[#1d3fa0]">${fmt(t.revenue ?? 0)}</td>
+                          <td className="py-3 text-right font-mono font-semibold text-[#1d3fa0]">${fmtIDR(t.revenue ?? 0)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -116,7 +113,7 @@ export default async function MerchPage() {
                 {/* Total Revenue */}
                 <div className="mt-4 pt-3 border-t border-[#dde3ef] flex justify-end items-center gap-3">
                   <span className="text-xs font-mono uppercase tracking-widest text-slate-400">Total Revenue</span>
-                  <span className="font-display text-xl font-black text-[#1d3fa0]">${fmt(totalTicketRevenue)}</span>
+                  <span className="font-display text-xl font-black text-[#1d3fa0]">${fmtIDR(totalTicketRevenue)}</span>
                 </div>
               </>
             )}
