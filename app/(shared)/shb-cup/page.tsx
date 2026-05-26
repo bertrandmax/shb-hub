@@ -1,9 +1,6 @@
-import { getCurrentUser } from '@/lib/auth/get-user'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { Route } from 'next'
-import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -92,14 +89,10 @@ function statusLabel(status: EventStatus): string {
 }
 
 export default async function ShbCupPage() {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
-
   const { event, competitions } = await getShbCupData()
 
   return (
-    <AppShell user={user}>
-      <div className="max-w-5xl space-y-6">
+    <div className="max-w-5xl space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
           <div>
@@ -161,6 +154,5 @@ export default async function ShbCupPage() {
           </div>
         )}
       </div>
-    </AppShell>
   )
 }

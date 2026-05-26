@@ -1,7 +1,4 @@
-import { getCurrentUser } from '@/lib/auth/get-user'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -15,9 +12,6 @@ const SCOPE_TYPE_OPTIONS = [
 ]
 
 export default async function MeetingNotesPage() {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
-
   const supabase = await createClient()
 
   const { data } = await supabase
@@ -32,8 +26,7 @@ export default async function MeetingNotesPage() {
   }
 
   return (
-    <AppShell user={user}>
-      <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
@@ -148,6 +141,5 @@ export default async function MeetingNotesPage() {
           </details>
         </Card>
       </div>
-    </AppShell>
   )
 }

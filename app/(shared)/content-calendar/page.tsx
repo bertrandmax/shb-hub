@@ -1,7 +1,4 @@
-import { getCurrentUser } from '@/lib/auth/get-user'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -59,9 +56,6 @@ export default async function ContentCalendarPage({
 }: {
   searchParams: { status?: string; platform?: string }
 }) {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
-
   const supabase = await createClient()
 
   const statusFilter   = searchParams.status   ?? ''
@@ -104,8 +98,7 @@ export default async function ContentCalendarPage({
   const pillInactive = 'bg-white border border-[#dde3ef] text-slate-500 hover:border-[#1d3fa0] hover:text-[#1d3fa0]'
 
   return (
-    <AppShell user={user}>
-      <div className="max-w-5xl space-y-6">
+    <div className="max-w-5xl space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
@@ -273,6 +266,5 @@ export default async function ContentCalendarPage({
           </details>
         </Card>
       </div>
-    </AppShell>
   )
 }

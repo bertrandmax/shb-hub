@@ -1,7 +1,4 @@
-import { getCurrentUser } from '@/lib/auth/get-user'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -55,9 +52,6 @@ export default async function BlockersPage({
 }: {
   searchParams: { status?: string; priority?: string }
 }) {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
-
   const supabase = await createClient()
   const { data: blockers } = await supabase
     .from('blockers')
@@ -88,8 +82,7 @@ export default async function BlockersPage({
   }
 
   return (
-    <AppShell user={user}>
-      <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -229,6 +222,5 @@ export default async function BlockersPage({
           </div>
         )}
       </div>
-    </AppShell>
   )
 }

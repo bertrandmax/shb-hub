@@ -1,9 +1,7 @@
-import { getCurrentUser } from '@/lib/auth/get-user'
 import { createClient } from '@/lib/supabase/server'
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Route } from 'next'
-import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -116,9 +114,6 @@ export default async function CompetitionDetailPage({
   params: { competitionId: string }
   searchParams: { tab?: string }
 }) {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
-
   const data = await getCompetitionData(params.competitionId)
   if (!data) notFound()
 
@@ -126,8 +121,7 @@ export default async function CompetitionDetailPage({
   const activeTab = searchParams.tab === 'teams' ? 'teams' : 'matches'
 
   return (
-    <AppShell user={user}>
-      <div className="max-w-5xl space-y-6">
+    <div className="max-w-5xl space-y-6">
         {/* Back link + header */}
         <div>
           <Link
@@ -277,6 +271,5 @@ export default async function CompetitionDetailPage({
           </>
         )}
       </div>
-    </AppShell>
   )
 }

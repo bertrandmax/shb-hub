@@ -1,7 +1,4 @@
-import { getCurrentUser } from '@/lib/auth/get-user'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -104,16 +101,12 @@ function StatCard({ label, value, color }: { label: string; value: number | stri
 }
 
 export default async function RunPage() {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
-
   const { event, divisions, totalTasks, doneTasks, volunteerCount } = await getRunData()
 
   const taskPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0
 
   return (
-    <AppShell user={user}>
-      <div className="max-w-5xl space-y-6">
+    <div className="max-w-5xl space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
           <div>
@@ -202,6 +195,5 @@ export default async function RunPage() {
           </>
         )}
       </div>
-    </AppShell>
   )
 }

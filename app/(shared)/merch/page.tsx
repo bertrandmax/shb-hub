@@ -1,14 +1,8 @@
-import { getCurrentUser } from '@/lib/auth/get-user'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { fmtIDR } from '@/lib/format'
 
 export default async function MerchPage() {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
-
   const supabase = await createClient()
 
   const [{ data: merch }, { data: tickets }] = await Promise.all([
@@ -28,8 +22,7 @@ export default async function MerchPage() {
   const totalTicketRevenue = ticketSales.reduce((sum: number, t: any) => sum + (t.revenue ?? 0), 0)
 
   return (
-    <AppShell user={user}>
-      <div className="max-w-5xl space-y-8">
+    <div className="max-w-5xl space-y-8">
         {/* Header */}
         <h1 className="font-display text-2xl font-black uppercase tracking-tight text-[#1d3fa0]">
           Merch & Tickets
@@ -120,6 +113,5 @@ export default async function MerchPage() {
           </Card>
         </section>
       </div>
-    </AppShell>
   )
 }

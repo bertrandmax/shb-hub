@@ -1,7 +1,4 @@
-import { getCurrentUser } from '@/lib/auth/get-user'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 
@@ -31,9 +28,6 @@ async function getReportData() {
 }
 
 export default async function ReportsPage() {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
-
   const { sponsors, tasks, blockers, funds } = await getReportData()
 
   // ── Sponsor summary ─────────────────────────────────────────────────────────
@@ -93,8 +87,7 @@ export default async function ReportsPage() {
   }
 
   return (
-    <AppShell user={user}>
-      <div className="max-w-5xl space-y-8">
+    <div className="max-w-5xl space-y-8">
         {/* Header */}
         <h1 className="font-display text-2xl font-black uppercase tracking-tight text-[#1d3fa0]">
           Reports
@@ -255,6 +248,5 @@ export default async function ReportsPage() {
           )}
         </section>
       </div>
-    </AppShell>
   )
 }
