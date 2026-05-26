@@ -24,11 +24,23 @@ function initials(name: string) {
     .toUpperCase()
 }
 
-export function TopBar({ user }: { user: AppUser }) {
+export function TopBar({ user, onToggle }: { user: AppUser; onToggle?: () => void }) {
   const roleLabel = ROLE_LABELS[user.role_type] ?? user.role_type
 
   return (
     <header className="h-14 bg-[#1d3fa0] shadow-topbar flex items-center px-5 gap-4 shrink-0 z-10 relative">
+      <button
+        onClick={onToggle}
+        className="md:hidden flex items-center justify-center w-8 h-8 text-white/80 hover:text-white transition-colors"
+        aria-label="Toggle menu"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+
       <span className="font-display font-black text-white text-lg tracking-widest uppercase select-none">
         SHB Hub
       </span>

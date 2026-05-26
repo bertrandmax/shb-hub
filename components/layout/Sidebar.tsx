@@ -89,12 +89,12 @@ function buildNav(user: AppUser): NavSection[] {
   return nav
 }
 
-export function Sidebar({ user }: { user: AppUser }) {
+function NavContent({ user, onClose }: { user: AppUser; onClose?: () => void }) {
   const pathname = usePathname()
   const nav = buildNav(user)
 
   return (
-    <aside className="w-52 bg-sidebar flex flex-col shrink-0 overflow-y-auto">
+    <>
       <nav className="flex-1 py-3 px-2 space-y-0.5">
         {nav.map(({ section, items }, sectionIndex) => (
           <div key={section || `section-${sectionIndex}`} className={cn(section && 'mt-4')}>
@@ -109,6 +109,7 @@ export function Sidebar({ user }: { user: AppUser }) {
                 <Link
                   key={href}
                   href={href as Route}
+                  onClick={onClose}
                   className={cn(
                     'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-body font-medium',
                     'transition-all duration-150 ease-out',
@@ -136,6 +137,57 @@ export function Sidebar({ user }: { user: AppUser }) {
           SHB Hub · v1
         </p>
       </div>
-    </aside>
+    </>
+  )
+}
+
+export function Sidebar({
+  user,
+  isOpen,
+  onClose,
+}: {
+  user: AppUser
+  isOpen?: boolean
+  onClose?: () => void
+}) {
+  return (
+    <>
+      {/* Backdrop — mobile only */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'bg-sidebar flex flex-col overflow-y-auto',
+          // Mobile: fixed drawer
+          'fixed inset-y-0 left-0 z-50 w-64 transition-transform duration-300 ease-in-out',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
+          // Desktop: always visible, relative
+          'md:relative md:w-52 md:translate-x-0 md:shrink-0',
+        )}
+      >
+        {/* Mobile close button */}
+        <div className="flex justify-end px-3 pt-3 md:hidden">
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center w-8 h-8 text-white/60 hover:text-white transition-colors"
+            aria-label="Close menu"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <NavContent user={user} onClose={onClose} />
+      </aside>
+    </>
   )
 }
