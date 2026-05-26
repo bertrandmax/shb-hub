@@ -3,8 +3,11 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { fmtIDR } from '@/lib/format'
+import { getEventCountdown } from '@/lib/event-date'
 
-async function getDashboardStats() {
+async function getDashboardStats(userId: string) {
   const supabase = await createClient()
   const [
     { count: openBlockers },
@@ -15,6 +18,9 @@ async function getDashboardStats() {
     { count: overdueFollowups },
     { data: milestones },
     { data: recentActivity },
+    { data: funds },
+    { data: myTasks },
+    { count: myTasksTotal },
   ] = await Promise.all([
     supabase.from('blockers').select('*', { count: 'exact', head: true }).eq('status', 'open'),
     supabase.from('resource_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
@@ -35,7 +41,23 @@ async function getDashboardStats() {
       .select('id, action, entity_type, created_at, users(name)')
       .order('created_at', { ascending: false })
       .limit(8),
+    supabase.from('funds').select('amount_budgeted, amount_received'),
+    supabase.from('tasks')
+      .select('id, title, status, due_date')
+      .eq('assigned_to', userId)
+      .neq('status', 'done')
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .limit(6),
+    supabase.from('tasks')
+      .select('*', { count: 'exact', head: true })
+      .eq('assigned_to', userId)
+      .neq('status', 'done'),
   ])
+
+  const allFunds = funds ?? []
+  const totalBudgeted = allFunds.reduce((sum: number, f: any) => sum + (f.amount_budgeted ?? 0), 0)
+  const totalReceived = allFunds.reduce((sum: number, f: any) => sum + (f.amount_received ?? 0), 0)
+
   return {
     openBlockers:     openBlockers     ?? 0,
     pendingRequests:  pendingRequests  ?? 0,
@@ -45,6 +67,10 @@ async function getDashboardStats() {
     overdueFollowups: overdueFollowups ?? 0,
     milestones:       milestones       ?? [],
     recentActivity:   recentActivity   ?? [],
+    totalBudgeted,
+    totalReceived,
+    myTasks:          myTasks          ?? [],
+    myTasksTotal:     myTasksTotal     ?? 0,
   }
 }
 
@@ -83,12 +109,20 @@ function StatCard({
   )
 }
 
+function budgetBarColor(pct: number) {
+  if (pct >= 80) return 'bg-emerald-500'
+  if (pct >= 50) return 'bg-[#a07020]'
+  return 'bg-red-500'
+}
+
 export default async function DashboardPage() {
   const user = await getCurrentUser()
   if (!user) redirect('/login')
 
-  const stats = await getDashboardStats()
-  const taskPct = stats.totalTasks > 0 ? Math.round((stats.doneTasks / stats.totalTasks) * 100) : 0
+  const stats     = await getDashboardStats(user.id)
+  const taskPct   = stats.totalTasks > 0 ? Math.round((stats.doneTasks / stats.totalTasks) * 100) : 0
+  const budgetPct = stats.totalBudgeted > 0 ? Math.round((stats.totalReceived / stats.totalBudgeted) * 100) : 0
+  const countdown = getEventCountdown()
 
   return (
     <AppShell user={user}>
@@ -99,6 +133,17 @@ export default async function DashboardPage() {
           </h1>
           <p className="text-xs text-slate-400 font-mono mt-0.5">Overview · SHB Competition Hub</p>
         </div>
+
+        {countdown.phase !== 'ended' && (
+          <div className="animate-fade-up stagger-1">
+            <StatCard
+              label={countdown.phase === 'during' ? 'SHB Hub 2026 — In Progress' : 'SHB Hub 2026'}
+              value={countdown.phase === 'during' ? `Day ${countdown.dayNumber}` : `D-${countdown.daysUntil}`}
+              accent="blue"
+              sub={countdown.phase === 'during' ? 'Nov 2 – Nov 7, 2026' : 'Starts Nov 2, 2026'}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-up stagger-2">
           <StatCard
@@ -148,6 +193,25 @@ export default async function DashboardPage() {
             </div>
           </Card>
         </div>
+
+        {stats.totalBudgeted > 0 && (
+          <div className="animate-fade-up stagger-3">
+            <Card>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[10px] font-mono font-medium uppercase tracking-widest text-slate-400">Budget Health</p>
+                <span className="text-xs font-mono font-semibold text-slate-500">
+                  {fmtIDR(stats.totalReceived)} of {fmtIDR(stats.totalBudgeted)}
+                </span>
+              </div>
+              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ease-out ${budgetBarColor(budgetPct)}`}
+                  style={{ width: `${Math.min(budgetPct, 100)}%` }}
+                />
+              </div>
+            </Card>
+          </div>
+        )}
 
         <div className="animate-fade-up stagger-3">
           <Card>
@@ -219,6 +283,44 @@ export default async function DashboardPage() {
                     </div>
                   </li>
                 ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+
+        <div className="animate-fade-up stagger-4">
+          <Card>
+            <p className="text-[10px] font-mono font-medium uppercase tracking-widest text-slate-400 mb-3">
+              My Tasks
+            </p>
+            {stats.myTasks.length === 0 ? (
+              <p className="text-sm text-slate-300 font-mono py-4 text-center">No tasks assigned to you.</p>
+            ) : (
+              <ul className="space-y-2.5">
+                {(stats.myTasks as any[]).map((t) => {
+                  const overdue = t.due_date && new Date(t.due_date) < new Date()
+                  return (
+                    <li key={t.id} className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-700 truncate">{t.title}</p>
+                        {t.due_date && (
+                          <p className={`text-[10px] font-mono mt-0.5 ${overdue ? 'text-red-500' : 'text-slate-400'}`}>
+                            Due {new Date(t.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                            {overdue ? ' · Overdue' : ''}
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant={t.status === 'in_progress' ? 'blue' : 'gold'}>
+                        {t.status === 'in_progress' ? 'In Progress' : 'To Do'}
+                      </Badge>
+                    </li>
+                  )
+                })}
+                {stats.myTasksTotal > 6 && (
+                  <li className="text-[10px] font-mono text-slate-400 text-right pt-1">
+                    +{stats.myTasksTotal - 6} more tasks
+                  </li>
+                )}
               </ul>
             )}
           </Card>
