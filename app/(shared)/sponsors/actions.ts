@@ -35,6 +35,8 @@ export async function addSponsor(formData: FormData) {
 }
 
 export async function updateSponsorStatus(id: string, status: string) {
+  const user = await getCurrentUser()
+  if (!user || !canManageSponsors(user.role_type)) throw new Error('Unauthorized')
   const supabase = await createClient()
   await supabase.from('sponsors').update({ status }).eq('id', id)
   revalidatePath('/sponsors')
@@ -43,10 +45,11 @@ export async function updateSponsorStatus(id: string, status: string) {
 export async function updateAmountReceived(formData: FormData) {
   const user = await getCurrentUser()
   if (!user || !canManageSponsors(user.role_type)) throw new Error('Unauthorized')
-  const id              = formData.get('id') as string
-  const amount_received = Number(formData.get('amount_received'))
-  const supabase        = await createClient()
-  await supabase.from('sponsors').update({ amount_received }).eq('id', id)
+  const id  = formData.get('id') as string
+  const val = Number(formData.get('amount_received'))
+  if (isNaN(val) || val < 0) throw new Error('Invalid amount')
+  const supabase = await createClient()
+  await supabase.from('sponsors').update({ amount_received: val }).eq('id', id)
   revalidatePath('/sponsors')
 }
 
