@@ -2,21 +2,14 @@ import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { addMeetingNote } from './actions'
-
-const SCOPE_TYPE_OPTIONS = [
-  { value: 'global',      label: 'Global' },
-  { value: 'event',       label: 'Event' },
-  { value: 'competition', label: 'Competition' },
-  { value: 'division',    label: 'Division' },
-]
+import { AddMeetingNoteForm } from './AddMeetingNoteForm'
 
 export default async function MeetingNotesPage() {
   const supabase = await createClient()
 
   const { data } = await supabase
     .from('meeting_notes')
-    .select('id, title, body, scope_type, scope_id, created_at, users(name)')
+    .select('id, title, body, scope_type, scope_id, attachment_url, created_at, users(name)')
     .order('created_at', { ascending: false })
 
   const notes = (data ?? []) as any[]
@@ -65,11 +58,23 @@ export default async function MeetingNotesPage() {
                       </span>
                     </div>
                   </summary>
-                  {note.body && (
+                  {(note.body || note.attachment_url) && (
                     <div className="mt-3 pt-3 border-t border-[#dde3ef]">
-                      <p className="text-sm text-slate-600 font-body leading-relaxed whitespace-pre-wrap">
-                        {note.body}
-                      </p>
+                      {note.body && (
+                        <p className="text-sm text-slate-600 font-body leading-relaxed whitespace-pre-wrap">
+                          {note.body}
+                        </p>
+                      )}
+                      {note.attachment_url && (
+                        <a
+                          href={note.attachment_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 mt-2 text-xs font-mono text-[#1d3fa0] hover:underline"
+                        >
+                          📎 Attachment
+                        </a>
+                      )}
                     </div>
                   )}
                 </details>
@@ -80,65 +85,7 @@ export default async function MeetingNotesPage() {
 
         {/* Add Meeting Note inline form */}
         <Card>
-          <details>
-            <summary className="cursor-pointer text-xs font-mono font-semibold uppercase tracking-widest text-[#1d3fa0] hover:text-[#1a3690] select-none">
-              + Add Meeting Note
-            </summary>
-            <form action={addMeetingNote} className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="sm:col-span-2 flex flex-col gap-1">
-                <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Title</label>
-                <input
-                  name="title"
-                  type="text"
-                  required
-                  placeholder="e.g. Weekly Sync – 20 May 2026"
-                  className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm font-body text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]"
-                />
-              </div>
-
-              <div className="sm:col-span-2 flex flex-col gap-1">
-                <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Notes</label>
-                <textarea
-                  name="body"
-                  rows={5}
-                  placeholder="Meeting notes, decisions, action items…"
-                  className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm font-body text-slate-800 resize-none placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Scope Type</label>
-                <select
-                  name="scope_type"
-                  className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm font-body text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]"
-                >
-                  <option value="">None</option>
-                  {SCOPE_TYPE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Scope ID</label>
-                <input
-                  name="scope_id"
-                  type="text"
-                  placeholder="e.g. event UUID"
-                  className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm font-body text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]"
-                />
-              </div>
-
-              <div className="sm:col-span-2 flex justify-end">
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center font-semibold rounded-xl transition-colors font-body px-4 py-2.5 text-sm bg-[#1d3fa0] hover:bg-[#1a3690] text-white"
-                >
-                  Save Note
-                </button>
-              </div>
-            </form>
-          </details>
+          <AddMeetingNoteForm />
         </Card>
       </div>
   )
