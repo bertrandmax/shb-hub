@@ -25,7 +25,8 @@ values (
     'text/plain',
     'text/csv'
   ]
-);
+)
+on conflict (id) do nothing;
 
 -- Allow authenticated users to upload
 create policy "documents_upload"

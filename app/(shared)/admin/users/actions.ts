@@ -14,13 +14,18 @@ export async function inviteUser(
   const user = await getCurrentUser()
   if (!user || !isProjectManager(user.role_type)) return { error: 'Unauthorized' }
 
-  const email      = (formData.get('email') as string).trim().toLowerCase()
+  const email      = ((formData.get('email') as string) ?? '').trim().toLowerCase()
   const role_type  = formData.get('role_type') as string
-  const scope_type = (formData.get('scope_type') as string) || null
-  const scope_id   = (formData.get('scope_id')   as string) || null
+  const scope_type = ((formData.get('scope_type') as string) ?? '').trim() || null
+  const scope_id   = ((formData.get('scope_id')   as string) ?? '').trim() || null
 
   if (!email || !role_type) return { error: 'Email and role are required.' }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: 'Invalid email address.' }
+
+  const VALID_SCOPE_TYPES = ['global', 'event', 'competition', 'division']
+  if (scope_type && !VALID_SCOPE_TYPES.includes(scope_type)) {
+    return { error: 'Invalid scope type.' }
+  }
 
   const supabase = await createClient()
 
@@ -41,7 +46,7 @@ export async function inviteUser(
     email,
     role_type,
     scope_type,
-    scope_id: scope_id || null,
+    scope_id,
     expires_at,
     invited_by: user.id,
   })

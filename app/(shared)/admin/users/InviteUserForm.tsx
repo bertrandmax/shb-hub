@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { useFormState, useFormStatus } from 'react-dom'
 import { inviteUser, type InviteState } from './actions'
 
@@ -43,6 +44,11 @@ function SubmitButton() {
 
 export function InviteUserForm() {
   const [state, action] = useFormState<InviteState, FormData>(inviteUser, {})
+  const formRef = useRef<HTMLFormElement>(null)
+
+  useEffect(() => {
+    if (state.success) formRef.current?.reset()
+  }, [state.success])
 
   return (
     <details>
@@ -50,7 +56,7 @@ export function InviteUserForm() {
         + Invite User
       </summary>
 
-      <form action={action} className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <form ref={formRef} action={action} className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {state.error && (
           <div className="sm:col-span-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700 font-mono">
             {state.error}
