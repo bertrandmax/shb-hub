@@ -14,9 +14,13 @@ async function requireShbCupManager() {
   return user
 }
 
+const VALID_STATUSES = ['upcoming', 'active', 'completed'] as const
+type EventStatus = typeof VALID_STATUSES[number]
+
 export async function updateShbCupStatus(formData: FormData) {
   await requireShbCupManager()
   const status = formData.get('status') as string
+  if (!VALID_STATUSES.includes(status as EventStatus)) throw new Error('Invalid status')
   const supabase = await createClient()
   await supabase.from('events').update({ status }).eq('name', EVENT_NAME)
   revalidatePath('/shb-cup')
