@@ -15,6 +15,7 @@ const LABEL_CLS = 'text-xs font-semibold font-mono uppercase tracking-wide text-
 
 export function AddDocumentForm() {
   const [uploading, setUploading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
@@ -23,41 +24,48 @@ export function AddDocumentForm() {
     e.preventDefault()
     setError(null)
     setSuccess(false)
+    setSubmitting(true)
+    try {
+      const form = e.currentTarget
+      const formData = new FormData(form)
+      const file = formData.get('file') as File | null
 
-    const form = e.currentTarget
-    const formData = new FormData(form)
-    const file = formData.get('file') as File | null
+      let fileUrl = (formData.get('file_url') as string).trim()
 
-    let fileUrl = (formData.get('file_url') as string).trim()
-
-    if (file && file.size > 0) {
-      setUploading(true)
-      const uploadForm = new FormData()
-      uploadForm.set('file', file)
-      try {
-        const res = await fetch('/api/upload', { method: 'POST', body: uploadForm })
-        const json = await res.json()
-        if (!res.ok) { setError(json.error ?? 'Upload failed'); setUploading(false); return }
-        fileUrl = json.url
-      } catch {
-        setError('Upload failed. Please try again.')
-        setUploading(false)
-        return
+      if (file && file.size > 0) {
+        setUploading(true)
+        const uploadForm = new FormData()
+        uploadForm.set('file', file)
+        try {
+          const res = await fetch('/api/upload', { method: 'POST', body: uploadForm })
+          const json = await res.json()
+          if (!res.ok) { setError(json.error ?? 'Upload failed'); return }
+          fileUrl = json.url
+        } catch {
+          setError('Upload failed. Please try again.')
+          return
+        }
       }
+
+      if (!fileUrl) { setError('Provide a file or a URL.'); return }
+
+      const submitData = new FormData()
+      submitData.set('name', formData.get('name') as string)
+      submitData.set('file_url', fileUrl)
+      submitData.set('scope_type', formData.get('scope_type') as string)
+      submitData.set('scope_id', formData.get('scope_id') as string)
+
+      try {
+        await addDocument(submitData)
+        setSuccess(true)
+        formRef.current?.reset()
+      } catch {
+        setError('Failed to save document. Please try again.')
+      }
+    } finally {
+      setSubmitting(false)
       setUploading(false)
     }
-
-    if (!fileUrl) { setError('Provide a file or a URL.'); return }
-
-    const submitData = new FormData()
-    submitData.set('name', formData.get('name') as string)
-    submitData.set('file_url', fileUrl)
-    submitData.set('scope_type', formData.get('scope_type') as string)
-    submitData.set('scope_id', formData.get('scope_id') as string)
-
-    await addDocument(submitData)
-    setSuccess(true)
-    formRef.current?.reset()
   }
 
   return (
@@ -112,10 +120,10 @@ export function AddDocumentForm() {
         <div className="sm:col-span-2 flex justify-end">
           <button
             type="submit"
-            disabled={uploading}
+            disabled={submitting}
             className="inline-flex items-center justify-center font-semibold rounded-xl transition-colors font-body px-4 py-2.5 text-sm bg-[#1d3fa0] hover:bg-[#1a3690] text-white disabled:opacity-50"
           >
-            {uploading ? 'Uploading…' : 'Add Document'}
+            {uploading ? 'Uploading…' : submitting ? 'Saving…' : 'Add Document'}
           </button>
         </div>
       </form>
