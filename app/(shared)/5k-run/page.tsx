@@ -2,6 +2,10 @@ import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { getCurrentUser } from '@/lib/auth/get-user'
+import { canManageEvent } from '@/lib/auth/roles'
+import { EVENTS } from '@/lib/constants'
+import { updateRunStatus, addDivision, addRunMilestone, addRunTask } from './actions'
 
 type EventStatus = 'upcoming' | 'active' | 'completed'
 type DivisionType = 'marketing' | 'central_support' | 'run' | 'shared'
@@ -101,7 +105,11 @@ function StatCard({ label, value, color }: { label: string; value: number | stri
 }
 
 export default async function RunPage() {
-  const { event, divisions, totalTasks, doneTasks, volunteerCount } = await getRunData()
+  const [{ event, divisions, totalTasks, doneTasks, volunteerCount }, user] = await Promise.all([
+    getRunData(),
+    getCurrentUser(),
+  ])
+  const canManage = !!user && canManageEvent(user.role_type, EVENTS.RUN)
 
   const taskPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0
 
@@ -192,6 +200,93 @@ export default async function RunPage() {
                 </div>
               )}
             </div>
+
+            {canManage && (
+              <div className="space-y-4">
+                {/* Status toggle */}
+                <div className="rounded-2xl border border-[#dde3ef] bg-white p-5 shadow-sm">
+                  <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-3">Manage Event</p>
+                  <div className="flex flex-wrap gap-3">
+                    {(['upcoming', 'active', 'completed'] as const).map((s) => (
+                      <form key={s} action={updateRunStatus}>
+                        <input type="hidden" name="status" value={s} />
+                        <button type="submit" className="px-3 py-1.5 text-xs font-mono font-semibold rounded-lg border border-[#dde3ef] hover:bg-[#f0f2f8] text-slate-600 capitalize">
+                          → {s.charAt(0).toUpperCase() + s.slice(1)}
+                        </button>
+                      </form>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Add Division */}
+                <div className="rounded-2xl border border-[#dde3ef] bg-white p-5 shadow-sm">
+                  <details>
+                    <summary className="cursor-pointer text-xs font-mono font-semibold uppercase tracking-widest text-[#1d3fa0] select-none">+ Add Division</summary>
+                    <form action={addDivision} className="mt-3 flex gap-3 items-end flex-wrap">
+                      <input type="hidden" name="event_id" value={event.id} />
+                      <div className="flex flex-col gap-1 flex-1 min-w-40">
+                        <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Name</label>
+                        <input name="name" type="text" required className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Type</label>
+                        <select name="type" className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]">
+                          <option value="run">Run</option>
+                          <option value="shared">Shared</option>
+                          <option value="marketing">Marketing</option>
+                          <option value="central_support">Central Support</option>
+                        </select>
+                      </div>
+                      <button type="submit" className="inline-flex items-center font-semibold rounded-xl px-4 py-2 text-sm bg-[#1d3fa0] text-white hover:bg-[#1a3690] self-end">Add</button>
+                    </form>
+                  </details>
+                </div>
+
+                {/* Add Milestone */}
+                <div className="rounded-2xl border border-[#dde3ef] bg-white p-5 shadow-sm">
+                  <details>
+                    <summary className="cursor-pointer text-xs font-mono font-semibold uppercase tracking-widest text-[#1d3fa0] select-none">+ Add Milestone</summary>
+                    <form action={addRunMilestone} className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input type="hidden" name="event_id" value={event.id} />
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Title</label>
+                        <input name="title" type="text" required className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Date</label>
+                        <input name="date" type="date" required className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]" />
+                      </div>
+                      <div className="sm:col-span-2 flex flex-col gap-1">
+                        <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Description</label>
+                        <input name="description" type="text" className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]" />
+                      </div>
+                      <div className="sm:col-span-2 flex justify-end">
+                        <button type="submit" className="inline-flex items-center font-semibold rounded-xl px-4 py-2 text-sm bg-[#1d3fa0] text-white hover:bg-[#1a3690]">Save Milestone</button>
+                      </div>
+                    </form>
+                  </details>
+                </div>
+
+                {/* Add Task */}
+                <div className="rounded-2xl border border-[#dde3ef] bg-white p-5 shadow-sm">
+                  <details>
+                    <summary className="cursor-pointer text-xs font-mono font-semibold uppercase tracking-widest text-[#1d3fa0] select-none">+ Add Task</summary>
+                    <form action={addRunTask} className="mt-3 flex gap-3 items-end flex-wrap">
+                      <input type="hidden" name="event_id" value={event.id} />
+                      <div className="flex flex-col gap-1 flex-1 min-w-40">
+                        <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Task Title</label>
+                        <input name="title" type="text" required className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold font-mono uppercase tracking-wide text-slate-500">Due Date</label>
+                        <input name="due_date" type="date" className="rounded-lg border border-[#dde3ef] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d3fa0]/30 focus:border-[#1d3fa0]" />
+                      </div>
+                      <button type="submit" className="inline-flex items-center font-semibold rounded-xl px-4 py-2 text-sm bg-[#1d3fa0] text-white hover:bg-[#1a3690] self-end">Add</button>
+                    </form>
+                  </details>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
