@@ -9,7 +9,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { isProjectManager } from '@/lib/auth/roles'
 import { addSponsor } from './actions'
 import { SponsorStatusSelect } from './SponsorStatusSelect'
-import { fmtIDR } from '@/lib/format'
+import { SponsorRow } from './SponsorRow'
+import { fmtMYR } from '@/lib/format'
 
 type SponsorStatus = 'prospect' | 'contacted' | 'committed' | 'declined'
 
@@ -43,14 +44,35 @@ export default async function SponsorsPage({
   const user = (await getCurrentUser())!
 
   const supabase = await createClient()
-  const { data: sponsors } = await supabase
-    .from('sponsors')
-    .select('id, company_name, contact_name, contact_email, status, amount_pledged, amount_received, next_followup_date, notes, created_at')
-    .order('created_at', { ascending: false })
+
+  const [{ data: sponsors }, { data: allInteractions }, { data: allDeliverables }] = await Promise.all([
+    supabase
+      .from('sponsors')
+      .select('id, company_name, contact_name, contact_email, status, amount_pledged, amount_received, next_followup_date, notes, created_at')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('sponsor_interactions')
+      .select('id, sponsor_id, interaction_type, notes, date, users(name)')
+      .order('date', { ascending: false }),
+    supabase
+      .from('sponsor_deliverables')
+      .select('id, sponsor_id, description, type, status, due_date')
+      .order('created_at', { ascending: true }),
+  ])
 
   const allSponsors: any[] = (sponsors ?? []).sort(
     (a, b) => STATUS_ORDER[a.status as SponsorStatus] - STATUS_ORDER[b.status as SponsorStatus],
   )
+
+  const interactionsBySponsor = (allInteractions ?? []).reduce<Record<string, any[]>>((acc, i) => {
+    acc[i.sponsor_id] = [...(acc[i.sponsor_id] ?? []), i]
+    return acc
+  }, {})
+
+  const deliverablesBySponsor = (allDeliverables ?? []).reduce<Record<string, any[]>>((acc, d) => {
+    acc[d.sponsor_id] = [...(acc[d.sponsor_id] ?? []), d]
+    return acc
+  }, {})
 
   const activeFilter = searchParams.status && searchParams.status !== 'all' ? searchParams.status : null
   const filtered = activeFilter ? allSponsors.filter(s => s.status === activeFilter) : allSponsors
@@ -58,7 +80,10 @@ export default async function SponsorsPage({
   const totalPledged  = allSponsors.reduce((sum, s) => sum + (s.amount_pledged  ?? 0), 0)
   const totalReceived = allSponsors.reduce((sum, s) => sum + (s.amount_received ?? 0), 0)
 
-  const isPM = isProjectManager(user.role_type)
+  const isPM   = isProjectManager(user.role_type)
+  const isMktg = user.role_type === 'marketing_head'
+  const canAdd = isPM || isMktg
+  const canLog = isPM || isMktg || ['shb_cup_pm', '5k_run_pm'].includes(user.role_type)
 
   return (
       <div className="max-w-5xl space-y-6">
@@ -77,19 +102,19 @@ export default async function SponsorsPage({
           <Card className="flex items-center gap-4">
             <div>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-0.5">Total Pledged</p>
-              <p className="font-display text-2xl font-black text-[#1d3fa0]">{fmtIDR(totalPledged)}</p>
+              <p className="font-display text-2xl font-black text-[#1d3fa0]">{fmtMYR(totalPledged)}</p>
             </div>
           </Card>
           <Card className="flex items-center gap-4">
             <div>
               <p className="text-xs font-mono font-medium uppercase tracking-widest text-slate-400 mb-0.5">Total Received</p>
-              <p className="font-display text-2xl font-black text-green-700">{fmtIDR(totalReceived)}</p>
+              <p className="font-display text-2xl font-black text-green-700">{fmtMYR(totalReceived)}</p>
             </div>
           </Card>
         </div>
 
-        {/* Add Sponsor (PM only) */}
-        {isPM && (
+        {/* Add Sponsor (PM or Marketing Head) */}
+        {canAdd && (
           <details className="group">
             <summary className="list-none cursor-pointer">
               <Button size="sm" className="select-none">+ Add Sponsor</Button>
@@ -189,32 +214,20 @@ export default async function SponsorsPage({
                 </thead>
                 <tbody className="divide-y divide-[#dde3ef]">
                   {filtered.map((s: any) => (
-                    <tr key={s.id} className="hover:bg-[#f0f2f8]/60 transition-colors">
-                      <td className="px-4 py-3 font-semibold text-slate-800">{s.company_name}</td>
-                      <td className="px-4 py-3 text-slate-600">
-                        <div>{s.contact_name ?? '—'}</div>
-                        {s.contact_email && (
-                          <div className="text-xs font-mono text-slate-400">{s.contact_email}</div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {isPM
+                    <SponsorRow
+                      key={s.id}
+                      sponsor={s}
+                      interactions={interactionsBySponsor[s.id] ?? []}
+                      deliverables={deliverablesBySponsor[s.id] ?? []}
+                      isPM={isPM}
+                      canLog={canLog}
+                      statusCell={
+                        isPM
                           ? <SponsorStatusSelect id={s.id} currentStatus={s.status} />
                           : <Badge variant={STATUS_BADGE[s.status as SponsorStatus]}>{s.status}</Badge>
-                        }
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono tabular-nums text-slate-700">
-                        {fmtIDR(s.amount_pledged)}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono tabular-nums text-slate-700">
-                        {fmtIDR(s.amount_received)}
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs text-slate-500">
-                        {s.next_followup_date
-                          ? new Date(s.next_followup_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                          : '—'}
-                      </td>
-                    </tr>
+                      }
+                      fmtAmount={fmtMYR}
+                    />
                   ))}
                 </tbody>
               </table>
